@@ -1,0 +1,1568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portfolio Risk Dashboard | Power BI Style Interactive</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+
+  :root {
+    --bg: #f3f2f1;
+    --page: #ffffff;
+    --surface: #ffffff;
+    --surface2: #f8f8f8;
+    --border: #d2d0ce;
+    --border-accent: #c8c6c4;
+    --text: #252423;
+    --text-muted: #605e5c;
+    --text-dim: #8a8886;
+    --green: #107c10;
+    --green-dim: #dff6dd;
+    --red: #d13438;
+    --red-dim: #fde7e9;
+    --amber: #f2c811;
+    --amber-dim: #fff4ce;
+    --blue: #0078d4;
+    --blue-dim: #deecf9;
+    --purple: #5c2d91;
+    --purple-dim: #ede7f6;
+    --teal: #008272;
+    --teal-dim: #d9f2ed;
+    --accent: #f2c811;
+    --shadow: 0 1px 2px rgba(0,0,0,0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: "Segoe UI", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: var(--accent);
+    z-index: 10;
+  }
+
+  .header {
+    margin: 18px 22px 0;
+    padding: 18px 22px 16px;
+    background: var(--page);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+
+  .header-left h1 {
+    font-size: 23px;
+    font-weight: 600;
+    letter-spacing: -0.2px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+  }
+
+  .header-left p {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  .header-badge {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    background: #fafafa;
+    border: 1px solid var(--border-accent);
+    padding: 8px 12px;
+    border-radius: 2px;
+  }
+
+  .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+  }
+
+  .main {
+    padding: 16px 22px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 0;
+    background: var(--page);
+    border: 1px solid var(--border);
+    width: fit-content;
+    box-shadow: var(--shadow);
+  }
+
+  .tab {
+    padding: 9px 18px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    border: none;
+    border-right: 1px solid var(--border);
+    background: transparent;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .tab:last-child { border-right: none; }
+  .tab.active {
+    background: var(--accent);
+    color: #1f1f1f;
+  }
+  .tab:hover:not(.active) { background: #f8f8f8; color: var(--text); }
+
+  .panel { display: none; flex-direction: column; gap: 14px; }
+  .panel.active { display: flex; }
+
+  .metric-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+  }
+
+  .metric-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    padding: 15px 16px 14px;
+    position: relative;
+    overflow: hidden;
+    min-height: 116px;
+  }
+
+  .metric-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--accent);
+  }
+
+  .metric-card.green::before { background: var(--green); }
+  .metric-card.blue::before { background: var(--blue); }
+  .metric-card.amber::before { background: var(--amber); }
+  .metric-card.purple::before { background: var(--purple); }
+  .metric-card.teal::before { background: var(--teal); }
+  .metric-card.red::before { background: var(--red); }
+
+  .metric-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-bottom: 9px;
+  }
+
+  .metric-value {
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.4px;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .metric-sub { font-size: 11px; color: var(--text-muted); }
+
+  .metric-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 7px;
+    border-radius: 2px;
+    margin-top: 6px;
+  }
+
+  .metric-badge.pos { background: var(--green-dim); color: var(--green); }
+  .metric-badge.neg { background: var(--red-dim); color: var(--red); }
+  .metric-badge.neutral { background: var(--blue-dim); color: var(--blue); }
+
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    padding: 16px;
+  }
+
+  .chart-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+    gap: 10px;
+    border-bottom: 1px solid #edebe9;
+    padding-bottom: 10px;
+  }
+
+  .chart-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .chart-title i { color: var(--text-muted); font-size: 15px; }
+  .chart-desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 10px; font-size: 11px; color: var(--text-muted); }
+  .legend-item { display: flex; align-items: center; gap: 5px; }
+  .legend-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 780px) { .two-col { grid-template-columns: 1fr; } }
+
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  @media (max-width: 900px) { .three-col { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 600px) { .three-col { grid-template-columns: 1fr; } }
+
+  .holdings-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .holdings-table th {
+    text-align: left;
+    padding: 9px 10px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+    background: #fafafa;
+  }
+
+  .holdings-table td {
+    padding: 10px;
+    border-bottom: 1px solid #edebe9;
+    color: var(--text);
+  }
+
+  .holdings-table tr:last-child td { border-bottom: none; }
+  .holdings-table tr:hover td { background: #faf9f8; }
+
+  .ticker {
+    font-family: "Segoe UI", Arial, sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    background: #f3f2f1;
+    border: 1px solid var(--border-accent);
+    padding: 3px 7px;
+    border-radius: 2px;
+    letter-spacing: 0.4px;
+  }
+
+  .return-pos { color: var(--green); font-weight: 600; }
+  .return-neg { color: var(--red); font-weight: 600; }
+
+  .corr-grid {
+    display: grid;
+    grid-template-columns: 80px repeat(5, 1fr);
+    gap: 4px;
+    font-size: 10px;
+  }
+
+  .corr-cell {
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 10px;
+    border-radius: 2px;
+  }
+
+  .corr-label,
+  .corr-header {
+    height: 34px;
+    display: flex;
+    align-items: center;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-muted);
+  }
+
+  .corr-header { justify-content: center; background: #fafafa; border: 1px solid #edebe9; }
+
+  .stress-scenario { margin-bottom: 16px; }
+  .stress-scenario:last-child { margin-bottom: 0; }
+
+  .stress-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 7px;
+    font-size: 12px;
+  }
+
+  .stress-name { font-weight: 600; color: var(--text); }
+  .stress-return { font-weight: 700; }
+
+  .stress-bar-bg {
+    height: 7px;
+    background: #edebe9;
+    border-radius: 99px;
+    overflow: hidden;
+  }
+
+  .stress-bar-fill {
+    height: 100%;
+    border-radius: 99px;
+    transition: width 0.6s ease;
+  }
+
+  .stress-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .stress-asset {
+    background: #fafafa;
+    border: 1px solid #edebe9;
+    border-radius: 2px;
+    padding: 7px 8px;
+    text-align: center;
+  }
+
+  .stress-asset-name { font-size: 9px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; }
+  .stress-asset-val { font-size: 12px; font-weight: 700; margin-top: 2px; }
+
+  .value-scenario {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 11px 13px;
+    background: #fafafa;
+    border: 1px solid #edebe9;
+    margin-bottom: 7px;
+  }
+
+  .value-scenario:last-child { margin-bottom: 0; }
+  .vs-label { font-size: 12px; font-weight: 600; color: var(--text); }
+  .vs-return { font-size: 11px; color: var(--text-muted); }
+  .vs-value { font-size: 18px; font-weight: 600; }
+
+  .weight-pill {
+    display: inline-block;
+    width: 100%;
+    height: 7px;
+    background: #edebe9;
+    border-radius: 99px;
+    overflow: hidden;
+    margin-top: 4px;
+  }
+
+  .weight-fill { height: 100%; border-radius: 99px; }
+
+  .range-btns { display: flex; gap: 4px; }
+  .range-btn {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 5px 9px;
+    border: 1px solid var(--border-accent);
+    background: #fff;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: background 0.1s, color 0.1s;
+  }
+
+  .range-btn.active,
+  .range-btn:hover {
+    background: var(--accent);
+    color: var(--text);
+    border-color: var(--accent);
+  }
+
+
+
+  .input-strip {
+    display: grid;
+    grid-template-columns: minmax(220px, 1.2fr) repeat(3, minmax(150px, 1fr));
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .input-card {
+    background: var(--page);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    padding: 12px 14px;
+    min-height: 74px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .input-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-bottom: 6px;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .input-row input {
+    width: 100%;
+    height: 34px;
+    border: 1px solid var(--border-accent);
+    background: #fff;
+    color: var(--text);
+    padding: 0 10px;
+    font-family: "Segoe UI", Arial, sans-serif;
+    font-size: 13px;
+    outline: none;
+  }
+
+  .input-row input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(242, 200, 17, 0.18);
+  }
+
+  .input-action {
+    height: 34px;
+    border: 1px solid #b8a000;
+    background: var(--accent);
+    color: #1f1f1f;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 0 14px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .input-action:hover { filter: brightness(0.96); }
+
+  .input-output {
+    font-size: 12px;
+    color: var(--text);
+    font-weight: 600;
+    line-height: 1.45;
+  }
+
+  .input-note {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  .date-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    width: fit-content;
+    border-left: 4px solid var(--accent);
+    background: #fafafa;
+    border-top: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 7px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  @media (max-width: 900px) {
+    .input-strip { grid-template-columns: 1fr 1fr; }
+  }
+
+  @media (max-width: 600px) {
+    .input-strip { grid-template-columns: 1fr; }
+    .input-row { flex-direction: column; align-items: stretch; }
+  }
+
+  .sep { height: 1px; background: var(--border); }
+  canvas { border-radius: 0; }
+
+  @media (max-width: 650px) {
+    .header, .main { margin-left: 12px; margin-right: 12px; padding-left: 12px; padding-right: 12px; }
+    .main { padding: 12px; }
+    .tabs { width: 100%; overflow-x: auto; }
+    .tab { white-space: nowrap; }
+    .metric-value { font-size: 24px; }
+    .stress-row { grid-template-columns: repeat(2, 1fr); }
+  }
+
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <h1><i class="ti ti-chart-candlestick" style="margin-right:6px;color:#F2C811"></i>Portfolio Risk Dashboard</h1>
+    <p>5-asset equity portfolio · AAPL · AMZN · SHOP · QQQ · NVDA · 01 Jan 2023 – 31 Dec 2025</p>
+  </div>
+  <div class="header-badge">
+    <div class="dot"></div>
+    Portfolio active · <span id="aumBadge">$25,000 AUM</span>
+  </div>
+</header>
+
+<main class="main">
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('overview')">Overview</button>
+    <button class="tab" onclick="switchTab('performance')">Performance</button>
+    <button class="tab" onclick="switchTab('risk')">Risk & Correlation</button>
+    <button class="tab" onclick="switchTab('stress')">Stress Testing</button>
+  </div>
+
+  <!-- USER INPUT / POWER BI-STYLE SLICERS -->
+  <div class="input-strip">
+    <div class="input-card">
+      <div class="input-title">Graph date range</div>
+      <div class="date-pill"><i class="ti ti-calendar-stats"></i> 01 Jan 2023 → 31 Dec 2025</div>
+      <div class="input-note">All time-series visuals are mapped to this period.</div>
+    </div>
+
+    <div class="input-card">
+      <div class="input-title">Initial portfolio value</div>
+      <div class="input-row">
+        <input id="initialValueInput" type="number" min="100" step="500" value="25000" aria-label="Initial portfolio value">
+      </div>
+      <div class="input-note">Change this to recalculate portfolio and stress outputs.</div>
+    </div>
+
+    <div class="input-card">
+      <div class="input-title">Risk-free rate (%)</div>
+      <div class="input-row">
+        <input id="riskFreeInput" type="number" min="0" step="0.25" value="4.00" aria-label="Risk-free rate percentage">
+      </div>
+      <div class="input-note">Used to update the Sharpe Ratio card.</div>
+    </div>
+
+    <div class="input-card">
+      <div class="input-title">Output</div>
+      <div class="input-row">
+        <button class="input-action" onclick="applyUserInputs()">Update Output</button>
+      </div>
+      <div class="input-output" id="inputOutputText">$25,000 grows to $39,143 before stress testing.</div>
+    </div>
+  </div>
+
+  <!-- ==================== OVERVIEW PANEL ==================== -->
+  <div class="panel active" id="panel-overview">
+
+    <!-- KPI CARDS -->
+    <div class="metric-grid">
+      <div class="metric-card green">
+        <div class="metric-label">Portfolio Return</div>
+        <div class="metric-value" style="color:var(--green)">+56.6%</div>
+        <div class="metric-sub">Cumulative total return</div>
+        <div class="metric-badge pos"><i class="ti ti-trending-up" style="font-size:10px"></i> Outperforming</div>
+      </div>
+      <div class="metric-card blue">
+        <div class="metric-label">Portfolio Value</div>
+        <div class="metric-value" id="portfolioValueKpi" style="color:var(--text)">$39,143</div>
+        <div class="metric-sub" id="portfolioValueSub">From $25,000 initial</div>
+        <div class="metric-badge neutral" id="portfolioGainBadge">+$14,143 gain</div>
+      </div>
+      <div class="metric-card amber">
+        <div class="metric-label">Volatility (σ)</div>
+        <div class="metric-value" style="color:var(--amber)">1.63%</div>
+        <div class="metric-sub">Daily std deviation</div>
+        <div class="metric-badge neutral">Annualised ~25.9%</div>
+      </div>
+      <div class="metric-card purple">
+        <div class="metric-label">Sharpe Ratio</div>
+        <div class="metric-value" id="sharpeKpi" style="color:var(--purple)">2.03</div>
+        <div class="metric-sub">Risk-adjusted return</div>
+        <div class="metric-badge pos">Excellent (>1.0)</div>
+      </div>
+      <div class="metric-card teal">
+        <div class="metric-label">Risk-Free Rate</div>
+        <div class="metric-value" id="riskFreeKpi" style="color:var(--teal)">4.00%</div>
+        <div class="metric-sub">Benchmark hurdle</div>
+        <div class="metric-badge neutral">~10yr Treasury</div>
+      </div>
+      <div class="metric-card red">
+        <div class="metric-label">Worst Stress</div>
+        <div class="metric-value" style="color:var(--red)">-49%</div>
+        <div class="metric-sub">Tech crash scenario</div>
+        <div class="metric-badge neg" id="worstStressBadge">$12,750 floor</div>
+      </div>
+    </div>
+
+    <!-- WEIGHT + ANNUAL RETURNS TABLE -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title"><i class="ti ti-layout-grid"></i> Portfolio Holdings</div>
+          <div class="chart-desc">Weights, annual returns, and daily volatility per asset</div>
+        </div>
+      </div>
+      <table class="holdings-table">
+        <thead>
+          <tr>
+            <th>Ticker</th>
+            <th>Asset</th>
+            <th>Weight</th>
+            <th style="text-align:right">Annual Return</th>
+            <th style="text-align:right">Daily Vol (σ)</th>
+            <th style="text-align:right">Weight Bar</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="ticker">AAPL</span></td>
+            <td>Apple Inc.</td>
+            <td>30%</td>
+            <td class="return-pos" style="text-align:right">+29.8%</td>
+            <td style="text-align:right;color:var(--text-muted)">1.61%</td>
+            <td style="text-align:right;min-width:80px"><div class="weight-pill"><div class="weight-fill" style="width:30%;background:#3b82f6"></div></div></td>
+          </tr>
+          <tr>
+            <td><span class="ticker">AMZN</span></td>
+            <td>Amazon.com</td>
+            <td>10%</td>
+            <td class="return-pos" style="text-align:right">+39.4%</td>
+            <td style="text-align:right;color:var(--text-muted)">2.01%</td>
+            <td style="text-align:right;min-width:80px"><div class="weight-pill"><div class="weight-fill" style="width:10%;background:#a78bfa"></div></div></td>
+          </tr>
+          <tr>
+            <td><span class="ticker">SHOP</span></td>
+            <td>Shopify Inc.</td>
+            <td>10%</td>
+            <td class="return-pos" style="text-align:right">+65.8%</td>
+            <td style="text-align:right;color:var(--text-muted)">3.60%</td>
+            <td style="text-align:right;min-width:80px"><div class="weight-pill"><div class="weight-fill" style="width:10%;background:#f59e0b"></div></div></td>
+          </tr>
+          <tr>
+            <td><span class="ticker">QQQ</span></td>
+            <td>Invesco QQQ ETF</td>
+            <td>30%</td>
+            <td class="return-pos" style="text-align:right">+32.7%</td>
+            <td style="text-align:right;color:var(--text-muted)">1.26%</td>
+            <td style="text-align:right;min-width:80px"><div class="weight-pill"><div class="weight-fill" style="width:30%;background:#14b8a6"></div></div></td>
+          </tr>
+          <tr>
+            <td><span class="ticker">NVDA</span></td>
+            <td>Nvidia Corp.</td>
+            <td>20%</td>
+            <td class="return-pos" style="text-align:right">+136.6%</td>
+            <td style="text-align:right;color:var(--text-muted)">3.16%</td>
+            <td style="text-align:right;min-width:80px"><div class="weight-pill"><div class="weight-fill" style="width:20%;background:#22c55e"></div></div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ALLOCATION + SHARPE EXPLANATION -->
+    <div class="two-col">
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title"><i class="ti ti-chart-donut"></i> Allocation Breakdown</div>
+            <div class="chart-desc">Portfolio weight by asset</div>
+          </div>
+          <div class="legend">
+            <span class="legend-item"><span class="legend-dot" style="background:#3b82f6"></span>AAPL 30%</span>
+            <span class="legend-item"><span class="legend-dot" style="background:#a78bfa"></span>AMZN 10%</span>
+            <span class="legend-item"><span class="legend-dot" style="background:#f59e0b"></span>SHOP 10%</span>
+            <span class="legend-item"><span class="legend-dot" style="background:#14b8a6"></span>QQQ 30%</span>
+            <span class="legend-item"><span class="legend-dot" style="background:#22c55e"></span>NVDA 20%</span>
+          </div>
+        </div>
+        <div style="position:relative;height:220px">
+          <canvas id="allocChart" role="img" aria-label="Donut chart showing portfolio allocation: AAPL 30%, QQQ 30%, NVDA 20%, AMZN 10%, SHOP 10%">Portfolio allocation: AAPL 30%, QQQ 30%, NVDA 20%, AMZN 10%, SHOP 10%</canvas>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title"><i class="ti ti-chart-bar"></i> Annual Returns by Asset</div>
+            <div class="chart-desc">Total return over the period</div>
+          </div>
+        </div>
+        <div style="position:relative;height:220px">
+          <canvas id="returnsChart" role="img" aria-label="Bar chart showing annual returns: AAPL 29.8%, AMZN 39.4%, SHOP 65.8%, QQQ 32.7%, NVDA 136.6%">Annual returns per asset.</canvas>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ==================== PERFORMANCE PANEL ==================== -->
+  <div class="panel" id="panel-performance">
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title"><i class="ti ti-trending-up"></i> Cumulative Portfolio Return</div>
+          <div class="chart-desc">Cumulative portfolio return from 01 Jan 2023 to 31 Dec 2025</div>
+        </div>
+        <div class="range-btns">
+          <button class="range-btn active" onclick="filterPerfByYear('all',this)">All</button>
+          <button class="range-btn" onclick="filterPerfByYear(2023,this)">2023</button>
+          <button class="range-btn" onclick="filterPerfByYear(2024,this)">2024</button>
+          <button class="range-btn" onclick="filterPerfByYear(2025,this)">2025</button>
+        </div>
+      </div>
+      <div style="position:relative;height:260px">
+        <canvas id="perfChart" role="img" aria-label="Line chart showing cumulative portfolio returns over time">Portfolio cumulative returns over time.</canvas>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title"><i class="ti ti-chart-line"></i> Individual Price Trends</div>
+            <div class="chart-desc">Normalised performance across 01 Jan 2023 to 31 Dec 2025</div>
+          </div>
+          <div class="legend">
+            <span class="legend-item"><span class="legend-dot" style="background:#3b82f6"></span>AAPL</span>
+            <span class="legend-item"><span class="legend-dot" style="background:#a78bfa"></span>AMZN</span>
+            <span class="legend-item"><span class="legend-dot" style="background:#f59e0b"></span>SHOP</span>
+            <span class="legend-item"><span class="legend-dot" style="background:#14b8a6"></span>QQQ</span>
+            <span class="legend-item"><span class="legend-dot" style="background:#22c55e"></span>NVDA</span>
+          </div>
+        </div>
+        <div style="position:relative;height:240px">
+          <canvas id="priceChart" role="img" aria-label="Multi-line chart showing normalised price performance of all 5 assets">Normalised price performance.</canvas>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title"><i class="ti ti-wave-square"></i> Daily Return Distribution</div>
+            <div class="chart-desc">Portfolio daily returns histogram</div>
+          </div>
+        </div>
+        <div style="position:relative;height:240px">
+          <canvas id="histChart" role="img" aria-label="Histogram showing distribution of daily portfolio returns">Return distribution histogram.</canvas>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ==================== RISK PANEL ==================== -->
+  <div class="panel" id="panel-risk">
+
+    <div class="metric-grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
+      <div class="metric-card blue">
+        <div class="metric-label">AAPL Volatility</div>
+        <div class="metric-value" style="color:var(--blue)">1.61%</div>
+        <div class="metric-sub">Daily σ</div>
+      </div>
+      <div class="metric-card purple">
+        <div class="metric-label">AMZN Volatility</div>
+        <div class="metric-value" style="color:var(--purple)">2.01%</div>
+        <div class="metric-sub">Daily σ</div>
+      </div>
+      <div class="metric-card amber">
+        <div class="metric-label">SHOP Volatility</div>
+        <div class="metric-value" style="color:var(--amber)">3.60%</div>
+        <div class="metric-sub">Daily σ — highest risk</div>
+      </div>
+      <div class="metric-card teal">
+        <div class="metric-label">QQQ Volatility</div>
+        <div class="metric-value" style="color:var(--teal)">1.26%</div>
+        <div class="metric-sub">Daily σ — lowest risk</div>
+      </div>
+      <div class="metric-card green">
+        <div class="metric-label">NVDA Volatility</div>
+        <div class="metric-value" style="color:var(--green)">3.16%</div>
+        <div class="metric-sub">Daily σ</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title"><i class="ti ti-apps"></i> Correlation Matrix</div>
+            <div class="chart-desc">Pairwise return correlations (0=none, 1=perfect)</div>
+          </div>
+        </div>
+        <div id="corrMatrix" style="margin-top:4px"></div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title"><i class="ti ti-radar"></i> Volatility Comparison</div>
+            <div class="chart-desc">Daily σ vs portfolio average</div>
+          </div>
+          <div class="legend">
+            <span class="legend-item"><span class="legend-dot" style="background:#3b82f6"></span>Asset vol</span>
+            <span class="legend-item"><span class="legend-dot" style="background:rgba(239,68,68,0.4)"></span>Portfolio</span>
+          </div>
+        </div>
+        <div style="position:relative;height:240px">
+          <canvas id="volChart" role="img" aria-label="Grouped bar chart comparing individual asset volatility to portfolio volatility">Volatility comparison.</canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title"><i class="ti ti-maximize"></i> Rolling Volatility — 30-Day Window</div>
+          <div class="chart-desc">Portfolio rolling standard deviation mapped across 2023–2025</div>
+        </div>
+      </div>
+      <div style="position:relative;height:200px">
+        <canvas id="rollingVolChart" role="img" aria-label="Line chart of rolling 30-day portfolio volatility over time">Rolling portfolio volatility.</canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ==================== STRESS TESTING PANEL ==================== -->
+  <div class="panel" id="panel-stress">
+
+    <div class="metric-grid">
+      <div class="metric-card green">
+        <div class="metric-label">Base Portfolio Value</div>
+        <div class="metric-value" id="baseValueKpi" style="color:var(--text)">$25,000</div>
+        <div class="metric-sub">Initial investment</div>
+      </div>
+      <div class="metric-card amber">
+        <div class="metric-label">Market Crash</div>
+        <div class="metric-value" id="marketValueKpi" style="color:var(--amber)">$18,725</div>
+        <div class="metric-sub">-25.1% drawdown</div>
+        <div class="metric-badge neg" id="marketLossBadge">-$6,275</div>
+      </div>
+      <div class="metric-card red">
+        <div class="metric-label">Tech Crash</div>
+        <div class="metric-value" id="techValueKpi" style="color:var(--red)">$12,750</div>
+        <div class="metric-sub">-49.0% drawdown</div>
+        <div class="metric-badge neg" id="techLossBadge">-$12,250</div>
+      </div>
+      <div class="metric-card blue">
+        <div class="metric-label">Rate Hike Shock</div>
+        <div class="metric-value" id="rateValueKpi" style="color:var(--blue)">$20,675</div>
+        <div class="metric-sub">-17.3% drawdown</div>
+        <div class="metric-badge neg" id="rateLossBadge">-$4,325</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title"><i class="ti ti-alert-triangle"></i> Scenario Drawdowns</div>
+            <div class="chart-desc">Portfolio value under each stress scenario</div>
+          </div>
+        </div>
+
+        <!-- Market Crash -->
+        <div class="stress-scenario">
+          <div class="stress-header">
+            <span class="stress-name"><i class="ti ti-storm" style="font-size:13px;margin-right:4px;color:var(--amber)"></i>Market Crash</span>
+            <span class="stress-return" id="marketStressText" style="color:var(--amber)">-25.1% → $18,725</span>
+          </div>
+          <div class="stress-bar-bg"><div class="stress-bar-fill" style="width:25.1%;background:var(--amber)"></div></div>
+          <div class="stress-row">
+            <div class="stress-asset"><div class="stress-asset-name">AAPL</div><div class="stress-asset-val" style="color:var(--red)">-16%</div></div>
+            <div class="stress-asset"><div class="stress-asset-name">AMZN</div><div class="stress-asset-val" style="color:var(--red)">-10%</div></div>
+            <div class="stress-asset"><div class="stress-asset-name">SHOP</div><div class="stress-asset-val" style="color:var(--red)">-12%</div></div>
+            <div class="stress-asset"><div class="stress-asset-name">QQQ</div><div class="stress-asset-val" style="color:var(--red)">-43%</div></div>
+            <div class="stress-asset"><div class="stress-asset-name">NVDA</div><div class="stress-asset-val" style="color:var(--red)">-26%</div></div>
+          </div>
+        </div>
+
+        <!-- Tech Crash -->
+        <div class="stress-scenario">
+          <div class="stress-header">
+            <span class="stress-name"><i class="ti ti-cpu" style="font-size:13px;margin-right:4px;color:var(--red)"></i>Tech Crash</span>
+            <span class="stress-return" id="techStressText" style="color:var(--red)">-49.0% → $12,750</span>
+          </div>
+          <div class="stress-bar-bg"><div class="stress-bar-fill" style="width:49%;background:var(--red)"></div></div>
+          <div class="stress-row">
+            <div class="stress-asset"><div class="stress-asset-name">AAPL</div><div class="stress-asset-val" style="color:var(--red)">-43%</div></div>
+            <div class="stress-asset"><div class="stress-asset-name">AMZN</div><div class="stress-asset-val" style="color:var(--red)">-32%</div></div>
+            <div class="stress-asset"><div class="stress-asset-name">SHOP</div><div class="stress-asset-val" style="color:var(--red)">-10%</div></div>
+            <div class="stress-asset"><div class="stress-asset-name">QQQ</div><div class="stress-asset-val" style="color:var(--red)">-67%</div></div>
+            <div class="stress-asset"><div class="stress-asset-name">NVDA</div><div class="stress-asset-val" style="color:var(--red)">-59%</div></div>
+          </div>
+        </div>
+
+        <!-- Rate Hike -->
+        <div class="stress-scenario">
+          <div class="stress-header">
+            <span class="stress-name"><i class="ti ti-building-bank" style="font-size:13px;margin-right:4px;color:var(--blue)"></i>Rate Hike Shock</span>
+            <span class="stress-return" id="rateStressText" style="color:var(--blue)">-17.3% → $20,675</span>
+          </div>
+          <div class="stress-bar-bg"><div class="stress-bar-fill" style="width:17.3%;background:var(--blue)"></div></div>
+          <div class="stress-row">
+            <div class="stress-asset"><div class="stress-asset-name">AAPL</div><div class="stress-asset-val" style="color:var(--text-muted)">-15%</div></div>
+            <div class="stress-asset"><div class="stress-asset-name">AMZN</div><div class="stress-asset-val" style="color:var(--text-muted)">-12%</div></div>
+            <div class="stress-asset"><div class="stress-asset-name">SHOP</div><div class="stress-asset-val" style="color:var(--text-muted)">-17%</div></div>
+            <div class="stress-asset"><div class="stress-asset-name">QQQ</div><div class="stress-asset-val" style="color:var(--text-muted)">-25%</div></div>
+            <div class="stress-asset"><div class="stress-asset-name">NVDA</div><div class="stress-asset-val" style="color:var(--text-muted)">-12%</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title"><i class="ti ti-chart-bar"></i> Scenario Portfolio Values</div>
+            <div class="chart-desc">Value preservation comparison</div>
+          </div>
+        </div>
+        <div style="position:relative;height:260px">
+          <canvas id="stressChart" role="img" aria-label="Bar chart showing portfolio value under each stress scenario versus base value">Stress scenario portfolio values.</canvas>
+        </div>
+        <div style="margin-top:16px">
+          <div class="value-scenario">
+            <div><div class="vs-label">Base Value</div><div class="vs-return">No shock</div></div>
+            <div class="vs-value" id="baseVsValue" style="color:var(--green)">$25,000</div>
+          </div>
+          <div class="value-scenario">
+            <div><div class="vs-label">Rate Hike</div><div class="vs-return">-17.3%</div></div>
+            <div class="vs-value" id="rateVsValue" style="color:var(--blue)">$20,675</div>
+          </div>
+          <div class="value-scenario">
+            <div><div class="vs-label">Market Crash</div><div class="vs-return">-25.1%</div></div>
+            <div class="vs-value" id="marketVsValue" style="color:var(--amber)">$18,725</div>
+          </div>
+          <div class="value-scenario">
+            <div><div class="vs-label">Tech Crash</div><div class="vs-return">-49.0%</div></div>
+            <div class="vs-value" id="techVsValue" style="color:var(--red)">$12,750</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+// ===================== DATA =====================
+const rawPortfolioReturns = [0.089312706,- 0.124881844,0.166387027,0.086475531,0.041013527,0.100509249,0.047354638,0.12848011,0.065053426,-0.062851805,-0.091463011,0.212084390,0.212109992,-0.030769015,0.113293702,0.101265715,0.118568310,-0.173473344,0.113576023,0.140612426,0.250574838,-0.118837401,-0.064259385,0.086221436,-0.083988928,-0.031200047,-0.086938671,0.087324434,0.087877716,0.092521925,-0.251171564,-0.080955517,-0.161655570,0.035521067,0.160906182,-0.113061320,0.020580503,0.004661662,-0.091820647,0.065776137,0.164621707,-0.004832691,-0.063395106,0.084744459,-0.096643737,-0.100264456,0.047137580,0.159377231,0.022909300,0.164989914,-0.013412481,-0.006348098,0.109877545,-0.048433216,0.064590395,-0.026658392,-0.027396176,-0.038837631,0.144499827,0.047568875,0.090277352,-0.001832494,-0.012064441,-0.119775485,0.031226597,0.004509956,0.006346578,-0.063465779,-0.047151058,0.108382374,0.022850713,0.058095957,0.042114417,0.032395817,-0.069292560,0.041927639,-0.028966372,-0.124643407,0.055001674,0.138015000,0.011815045,-0.016267058,-0.034218729,-0.038254190,0.219683756,0.207329362,0.057955884,-0.036347743,0.054717233,0.007410034,-0.060851209,0.036643469,0.006188404,0.078079054,0.106366184,-0.041645829,0.015548457,-0.103823443,0.017892641,0.238283994,0.136488285,0.039825124,-0.088874009,0.110133071,0.019307355,0.025479961,0.057366573,-0.161890669,0.075569863,0.041222180,0.135773509,0.026793239,0.089088063,0.023772387,-0.044988520,0.019279742,-0.061165908,0.075384948,-0.032098125,-0.082319930,0.086243516,0.001901047,-0.029644721,0.107187538,-0.000033173,-0.013114089,-0.066301559,0.008764748,-0.034909438,0.040920827,0.116614984,0.162357353,-0.034970409,0.043460925,0.002868682,0.031673533,-0.147069186,-0.033448292,0.012507623,0.020006298,-0.016175726,-0.009415356,-0.094153563,-0.009415356,0.113638601,0.037697619,-0.028113377,-0.186447035,-0.052118099,0.014784569,0.020547848,-0.059925681,-0.099748641,0.025011131,-0.066049162,0.120058523,-0.049531939,-0.044675064,-0.075305663,-0.006537476,0.134431513,-0.023837768,0.130261289,-0.096238748,0.008434750,0.047154875,0.142581574,0.056353338,0.135949395,-0.005709539,-0.016432652,-0.088901493,-0.051230826,-0.034166846,0.069677365,-0.073326135,0.026477857,0.030496792,-0.104143323,-0.030985747,-0.042636745,-0.104132140,-0.157548580,0.006298088,0.052860941,-0.124689654,0.013408451,0.050525992,0.048088599,0.060569035,-0.138589177,0.074502155,0.003404547,0.099301339,0.002578197,0.052745604,0.039990708,-0.008407558,-0.107170093,0.079482611,-0.050358513,-0.110069558,-0.030894650,-0.084955240,0.050493998,0.070366153,-0.210533627,-0.130492340,0.079102798,0.089980902,0.006986678,0.137388442,0.298144343,0.074529496,0.026431530,0.070597813,0.032407341,-0.050351988,0.111082212,0.003635957,0.130725244,0.006017151,0.060171509,0.010981061,0.028698113,0.067632295,-0.031459279,0.020345059,-0.036100210,0.063452042,-0.011404353,-0.006969381,-0.036436679,0.030362159,-0.078725724,0.091286612,-0.098426794,0.074738195,0.044257882,-0.029287106,0.044614023,0.066411226,0.045580909,0.021288823,0.051503942,0.014885143,-0.103869220,0.050010323,-0.000985452,0.030393040,0.006073764,0.013853504,-0.034435461,-0.145445970,-0.067487564,-0.012797328,0.039570247,0.178253102,0.063119748,0.063167941,0.019404135,-0.002094146,-0.000002094,0.007684488,-0.038431658,0.042614721,0.121144571,0.033466750,0.015678287,0.033466749,0.027347575,0.006398643,-0.002691115,0.068100662,-0.049598769,-0.110048293,0.033944612,0.220764507,0.029275598,-0.014231414,0.090849553,0.017190223,0.107990254,-0.040982627,-0.183978133,0.089721148,0.019001361,-0.052155946,-0.102362988,-0.057827685,0.232714113,0.009061533,0.011275654,-0.013212719,-0.041317551,0.055057415,0.060237806,-0.007272124,-0.087782992,0.036127378,0.096138296,-0.056959138,-0.046946422,0.127187665,0.006146756,-0.014951555,-0.055639165,0.026774793,0.034970361,0.099220695,-0.045679373,0.030732474,-0.003514503,-0.042037702,0.009389092,-0.026568378,0.010149717,-0.028142249,-0.020663107,-0.078653181,0.075179164,-0.027674209,0.000364711,-0.037800746,0.111344832,-0.071512689,-0.097061058,-0.002300808,-0.059805921,-0.013847146,-0.156246396,0.086236733,0.119860537,-0.057230796,-0.002859509,0.119117213,0.052678747,-0.117016264,-0.026460333,0.122955651,0.156754847,0.092029517,-0.017118094,-0.190152170,-0.002649903,-0.060009388,0.018169847,0.013145736,0.070619405,-0.033275779,-0.001970889,0.038217024,-0.018958125,0.017005707,0.038234357,0.038486276,0.102775543,0.005075323,-0.055087206,-0.010355452,0.083677954,0.038930168,0.099720389,0.004746730,0.008929520,0.030367537,0.086050204,0.101195008,0.017847900,0.059513412,0.010425953,-0.016471680,-0.052386285,-0.011299847,-0.106296662,0.094925574,0.073874435,0.023457047,-0.053145726,0.040062424,0.049950871,0.057972896,0.038632565,0.019913999,0.011726875,0.050492846,-0.129115176,0.024066522,-0.006338887,0.073349267,-0.217685045,-0.047466758,-0.036961867,0.050299420,0.014140236,-0.216691779,-0.035626392,0.042510245,-0.007040755,0.042510245,0.235491671,-0.172785868,-0.186770810,-0.222405551,0.080792941,0.133980319,0.200045097,0.034679112,0.033758571,0.151154735,0.042475685,0.168844729,0.014211513,0.070597813,-0.107425817,-0.055030806,0.096563420,-0.203358361,0.094563422];
+
+// Prices arrays (sampled from excel data)
+const aaplPrices = [125.07,126.36,125.02,129.62,130.15,130.73,133.49,133.41,134.76,135.94,135.21,135.27,137.87,141.11,142.53,141.86,143.96,145.93,143,144.29,145.43,150.82,154.5,151.73,154.65,151.92,150.87,151.01,153.85,153.2,155.33,153.71,152.55,148.48,148.91,149.4,146.71,147.92,147.41,145.31,145.91,151.03,153.83,151.6,152.87,150.59,148.5,150.47,152.59,152.99,155.85,155,157.4,159.28,157.83,158.93,160.25,158.28,157.65,160.77,162.36,164.9,166.17,165.63,163.76,164.66,162.03,160.8,160.1,165.56,165.21,165.23,166.47,167.63,166.65,165.02,165.33,163.77,163.76,168.41,169.68,169.59,168.54,167.45,165.79,173.57,173.5,171.77,173.56,173.75,172.57,172.07,172.07,172.69,175.05,175.16,174.2,171.56,171.84,172.99,175.43,177.3,177.25,180.09,180.95,179.58,179.21,177.82,180.57,180.96,183.79,183.31,183.95,186.01,184.92,185.01,183.96,187,186.68,185.27,188.06,189.25,189.59,193.97,192.46,191.33,191.81,190.68,188.61,188.08,189.77,190.54,190.69,193.99,193.73,195.1,193.13,191.94,192.75,193.62,194.5,193.22,195.83,196.45,195.61,192.58,191.17,181.99,178.85,179.8,178.19,177.97,177.79,179.46,177.45,176.57,174,174.49,175.84,177.23,181.12,176.38,178.61,180.19,184.12,187.65,187.87,189.46,189.7,182.91,177.56,178.18,179.36,176.3,174.21,175.74,175.01,177.97,179.07,175.49,173.93,174.79,176.08,171.96,170.43,170.69,171.21,173.75,172.4,173.66,174.91,177.49,178.99,178.39,179.8,180.71,178.85,178.72,177.15,175.84,175.46,172.88,173,173.44,171.1,166.89,168.22,170.29,170.77,173.97,177.57,176.65,179.23,181.82,182.89,182.41,186.4,184.8,187.44,188.01,189.71,189.69,191.45,190.64,191.31,189.97,189.79,190.4,189.37,189.95,191.24,189.43,193.42,192.32,194.27,195.71,193.18,194.71,197.96,198.11,197.57,195.89,196.94,194.83,194.68,193.6,193.05,193.15,193.58,192.53,185.64,184.25,181.91,181.18,185.56,185.14,186.19,185.59,185.92,183.63,182.68,188.63,191.56,193.89,195.18,194.5,194.17,192.42,191.73,188.04,184.4,186.86,185.85,187.68,189.3,189.41,188.32,188.85,187.15,185.04,184.15,183.86,182.31,181.56,182.32,184.37,182.52,181.16,182.63,181.42,180.75,179.66,175.1,170.12,169.12,169,170.73,172.75,173.23,171.13,173,172.62,173.72,176.08,178.67,171.37,172.28,170.85,169.71,173.31,171.48,170.03,168.84,169.65,168.82,169.58,168.45,169.67,167.78,175.04,176.55,172.69,169.38,168,167.04,165,165.84,166.9,169.02,169.89,169.3,173.5,170.33,169.3,173.03,183.38,181.71,182.4,182.74,184.57,183.05,186.28,187.43,189.72,189.84,189.87,191.04,192.35,190.9,186.88,189.98,189.99,190.29,191.29,192.25,194.03,194.35,195.87,194.48,196.89,193.12,207.15,213.07,214.24,212.49,216.67,214.29,209.68,207.49,208.14,209.07,213.25,214.1,210.62,216.75,220.27,221.55,226.34,227.82,228.68,232.98,227.57,230.54,234.4,234.82,228.88,224.18,224.31,223.96,225.01,218.54,217.49,217.96,218.24,218.8,222.08,218.36,219.86,209.27,207.23,209.82,213.31,216.24,217.53,221.27,221.72,224.72,226.05,225.89,226.51,226.4,224.53,226.84,227.18,228.03,226.49,229.79,229,222.77,220.85,222.38,220.82,220.91,220.11,222.66,222.77,222.5,216.32,216.79,220.69,228.87,228.2,226.47,227.37,226.37,227.52,227.79,233,226.21,226.78,225.67,226.8,221.69,225.77,229.54,229.04,227.55,231.3,233.85,231.78,232.15,235,236.48,235.86,230.76,230.57,231.41,233.4,233.67,230.1,225.91,222.91,222.01,223.45,222.72,227.48,226.96,224.23,224.23,225.12,228.22,225,228.02,228.28,229,228.52,229.87,232.87,235.06,234.93,237.33,239.59,242.65,243.01,243.04,242.84,246.75,247.77,246.49,247.96,248.13,251.04,253.48,248.05,249.79,254.49,255.27,258.2,259.02,255.59,252.2,250.42,243.85,243.36,245,242.21,242.7,236.85,234.4,233.28,237.87,228.26,229.98,222.64,223.83,223.66,222.78,229.86,238.26,239.36,237.59,236,228.01,232.8,232.47,233.22,227.63,227.65,232.62,236.87,241.53,244.6,244.47,244.87,245.83,245.55,247.1,247.04,240.36,237.3,241.84,238.03,235.93,235.74,235.33,239.07,227.48,220.84,216.98,209.68,213.49,214,212.69,215.24,214.1,218.27,220.73,223.75,221.53,223.85,217.9,222.13,223.19,223.89,203.19,188.38,181.46,172.42,198.85,190.42,198.15,202.52,202.14,194.27,196.98,193.16,199.74,204.6,208.37,209.28,210.14,211.21,212.5,213.32,205.35,198.89,198.51,196.25,197.49,198.53,210.79,212.93,212.33,211.45,211.26,208.78,206.86,202.09,202.09,195.27,200.21,200.42,199.95,200.85,201.7,203.27,202.82,200.63,203.92,201.45,202.67,198.78,199.2,196.45,198.42,195.64,196.58,201,201.5,200.3,201.56,201,201.08,205.17,207.82,212.44,213.55,209.95,210.01,211.14,212.41,211.16,208.62,209.11,210.16,210.02,211.18,212.48,214.4,214.15,213.76,213.88,214.05,211.27,209.05,207.57,202.38,203.35,202.92,213.25,220.03,229.35,227.18,229.65,233.33,232.78,231.59,230.89,230.56,226.01,224.9,227.76,227.16,229.31,230.49,232.56,232.14,229.72,238.47,239.78,239.69,237.88,234.35,226.79,230.03,234.07,236.7,238.15,238.99,237.88,245.5,256.08,254.43,252.31,256.87,255.46,254.43,254.63,255.45,257.13,258.02,256.69,256.48,258.06,254.04,245.27,247.66,247.77,249.34,247.45,252.29,262.24,262.77,258.45,259.58,262.82,268.81,269,269.7,271.4,270.37,269.05,270.04,270.14,269.77,268.47,269.43,275.25,273.47,272.95,272.41,267.46,267.44,268.56,266.25,271.49,275.92,276.97,277.55,278.85,283.1,286.19,284.15,280.7,278.78,277.89,277.18,278.78,278.03,278.28,274.11,274.61,271.84,272.19,273.67,270.97,272.36,273.81,273.4,273.76,273.08,271.86];
+const nvidaPrices = [14.32,14.75,14.27,14.86,15.63,15.91,16,16.51,16.9,17.7,17.38,16.77,17.84,19.19,19.27,19.32,19.8,20.36,19.16,19.54,20.94,21.71,21.1,21.09,22.17,22.21,22.34,21.27,21.79,22.97,22.76,22,21.39,20.66,20.75,23.66,23.29,23.5,23.22,22.7,23.31,23.89,23.55,23.29,24.18,23.44,22.97,22.97,24.06,24.23,25.54,25.73,25.9,26.2,26.47,27.19,26.78,26.53,26.41,26.98,27.38,27.78,27.97,27.45,26.88,27.04,27.58,27.17,26.5,26.46,26.76,27,27.67,27.93,27.1,27.12,27.04,26.24,26.96,27.23,27.75,28.91,28.21,27.8,27.56,28.68,29.15,28.57,28.89,28.58,28.34,28.95,29.21,30.18,31.68,31.26,31.18,30.69,30.54,37.98,38.95,40.11,37.83,39.77,39.33,39.17,38.65,37.48,38.51,38.77,39.48,41.02,43,42.65,42.69,43.81,43.05,43.03,42.21,40.63,41.88,41.12,40.82,42.3,42.41,42.32,42.1,42.5,42.18,42.41,43.9,45.98,45.47,46.46,47.49,47.08,45.52,44.31,44.61,45.68,45.45,45.9,46.75,46.73,46.51,44.27,44.52,44.68,45.42,44.66,42.55,42.39,40.85,43.75,43.94,43.49,43.34,43.3,46.97,45.67,47.12,47.16,46.02,46.84,48.78,49.26,49.36,48.51,48.55,47.06,46.24,45.57,45.18,44.87,45.49,45.58,43.9,43.97,43.52,42.24,41.02,41.61,42.22,41.91,42.47,43.09,43.5,44.78,43.52,44.04,44.69,45.76,45.27,45.8,46.81,46.95,45.46,46.1,43.94,42.2,42.1,41.39,42.98,43.66,41.78,40.33,40.5,41.16,40.78,42.33,43.51,45.01,45.75,45.96,46.57,46.95,48.34,48.62,49.66,48.89,49.48,49.3,50.41,49.94,48.72,47.78,48.24,47.82,48.14,46.77,46.77,45.51,46.57,45.5,46.6,47.51,46.63,47.66,48.09,48.35,48.89,50.08,49.6,48.11,48.99,48.83,49.28,49.42,49.52,49.52,48.17,47.57,48,49.1,52.25,53.14,54.35,54.82,54.71,56.38,56.05,57.11,59.49,59.65,59.87,61.36,61.62,61.03,62.47,62.77,61.53,63.03,66.16,69.33,68.22,70.1,69.64,72.13,72.25,72.13,73.9,72.66,72.61,69.45,67.47,78.54,78.82,79.09,78.7,77.66,79.11,82.28,85.24,85.96,88.7,92.67,87.53,85.77,91.91,90.89,87.94,87.84,88.46,89.4,90.37,91.44,94.29,95,92.56,90.25,90.36,90.36,89.45,88.96,85.91,88.01,87.13,85.35,87.04,90.62,88.19,86,87.42,84.04,84.67,76.2,79.52,82.42,79.68,82.63,87.74,87.76,86.4,83.04,85.82,88.79,92.14,90.55,90.41,88.75,89.88,90.4,91.36,94.63,94.36,92.48,94.78,95.39,94.95,103.8,106.47,113.9,114.83,110.5,109.63,115,116.44,122.44,121,120.89,121.79,120.91,125.2,129.61,131.88,130.98,135.58,130.78,126.57,118.11,126.09,126.4,123.99,123.54,124.3,122.67,128.28,125.83,128.2,131.38,134.91,127.4,129.24,128.44,126.36,117.99,121.09,117.93,123.54,122.59,114.25,112.28,113.06,111.59,103.73,117.02,109.21,107.27,100.45,104.25,98.91,104.97,104.75,109.02,116.14,118.08,122.86,124.58,130,127.25,128.5,123.74,129.37,126.46,128.3,125.61,117.59,119.37,108,106.21,107.21,102.83,106.47,108.1,116.91,119.14,119.1,116.78,115.59,113.37,117.87,116,116.26,120.87,123.51,124.04,121.4,121.44,117,118.85,122.85,124.92,127.72,132.89,132.65,134.81,134.8,138.07,131.6,135.72,136.93,138,143.71,143.59,139.56,140.41,141.54,140.52,141.25,139.34,132.76,135.4,136.05,139.91,145.61,148.88,147.63,145.26,148.29,146.27,146.76,141.98,140.15,147.01,145.89,146.67,141.95,136.02,136.92,135.34,138.25,138.63,140.26,145.14,145.06,142.44,138.81,135.07,139.31,137.34,134.25,132,130.39,128.91,130.68,134.7,139.67,140.22,139.93,137.01,137.49,134.29,138.31,144.47,149.43,140.14,140.11,135.91,133.23,131.76,136.24,133.57,137.71,140.83,147.07,147.22,142.62,118.42,128.99,123.7,124.65,120.07,116.66,118.65,124.83,128.68,129.84,133.57,132.8,131.14,135.29,138.85,139.4,139.23,140.11,134.43,130.28,126.63,131.28,120.15,124.92,114.06,115.99,117.3,110.57,112.69,106.98,108.76,115.74,115.58,121.67,119.53,115.43,117.52,118.53,117.7,121.41,120.69,113.76,111.43,109.67,108.38,110.15,110.42,101.8,94.31,97.64,96.3,114.33,107.57,110.93,110.71,112.2,104.49,101.49,96.91,98.89,102.71,106.43,111.01,108.73,109.02,108.92,111.61,114.5,113.82,113.54,117.06,117.37,116.65,123,129.93,135.34,134.83,135.4,135.57,134.38,131.8,131.8,131.29,135.5,134.81,139.19,135.13,137.38,141.22,141.92,139.99,141.72,142.63,143.96,142.83,145,141.97,144.69,144.12,145.48,143.85,144.17,147.9,154.31,155.02,157.75,157.99,153.3,157.25,159.34,158.24,160,162.88,164.1,164.92,164.07,170.7,171.37,173,172.41,171.38,167.03,170.78,173.74,173.5,176.75,175.51,179.27,177.87,173.72,180,178.26,179.42,180.77,182.7,182.06,183.16,181.59,182.02,180.45,182.01,175.64,175.4,174.98,177.99,179.81,181.77,181.6,180.17,174.18,170.78,170.62,171.66,167.02,168.31,170.76,177.33,177.17,177.82,177.75,174.88,170.29,176.24,176.67,183.61,178.43,176.97,177.69,178.19,181.85,186.58,187.24,188.89,187.62,185.54,185.04,189.11,192.57,183.16,188.32,180.03,179.83,181.81,183.22,182.64,181.16,180.28,182.16,186.26,191.49,201.03,207.04,202.89,202.49,206.88,198.69,195.21,188.08,188.15,199.05,193.16,193.8,186.86,190.17,186.6,181.36,186.52,180.64,178.88,182.55,177.82,180.26,177,179.92,181.46,179.59,183.38,182.41,185.55,184.97,183.78,180.93,175.02,176.29,177.72,170.94,174.14,180.99,183.69,189.21,188.61,190.53,188.22,187.54,186.5];
+
+// Build cumulative portfolio returns from daily data
+function buildCumulative(returns) {
+  let cum = [0];
+  let val = 1;
+  for (let r of returns) {
+    val = val * (1 + r);
+    cum.push(((val - 1) * 100));
+  }
+  return cum;
+}
+
+function buildNormalized(prices) {
+  const base = prices[0];
+  return prices.map(p => ((p / base - 1) * 100));
+}
+
+// Rolling volatility
+function rollingVol(returns, window) {
+  const result = [];
+  for (let i = window; i < returns.length; i++) {
+    const slice = returns.slice(i - window, i);
+    const mean = slice.reduce((a, b) => a + b, 0) / window;
+    const variance = slice.reduce((a, b) => a + (b - mean) ** 2, 0) / (window - 1);
+    result.push(Math.sqrt(variance) * 100);
+  }
+  return result;
+}
+
+const cumulativeData = buildCumulative(rawPortfolioReturns);
+const totalPoints = rawPortfolioReturns.length;
+
+// Generate date labels mapped to the requested dashboard period
+// Period: 01 Jan 2023 to 31 Dec 2025
+const CHART_START_DATE = new Date('2023-01-01T00:00:00');
+const CHART_END_DATE = new Date('2025-12-31T00:00:00');
+
+function genDateObjects(n) {
+  const dates = [];
+  const start = CHART_START_DATE.getTime();
+  const end = CHART_END_DATE.getTime();
+  const step = n > 1 ? (end - start) / (n - 1) : 0;
+
+  for (let i = 0; i < n; i++) {
+    dates.push(new Date(start + step * i));
+  }
+
+  return dates;
+}
+
+function formatDateLabel(date) {
+  return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' });
+}
+
+const allDateObjects = genDateObjects(totalPoints + 1);
+const allDates = allDateObjects.map(formatDateLabel);
+
+// ===================== CHART.JS GLOBAL DEFAULTS =====================
+Chart.defaults.color = '#605e5c';
+Chart.defaults.borderColor = '#edebe9';
+Chart.defaults.font.family = 'Segoe UI, Arial, sans-serif';
+Chart.defaults.font.size = 11;
+
+// ===================== USER INPUT MODEL =====================
+const DASHBOARD_STATE = {
+  initialValue: 25000,
+  riskFreeRate: 0.04
+};
+
+const PORTFOLIO_TOTAL_RETURN = 0.56572;
+const ANNUAL_VOLATILITY = 0.259;
+const STRESS_RETURNS = {
+  market: -0.251,
+  tech: -0.49,
+  rate: -0.173
+};
+
+function money(value) {
+  return '$' + Math.round(value).toLocaleString('en-US');
+}
+
+function pct(value, decimals = 1) {
+  return (value >= 0 ? '+' : '') + (value * 100).toFixed(decimals) + '%';
+}
+
+function setText(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = value;
+}
+
+function applyUserInputs() {
+  const initialInput = document.getElementById('initialValueInput');
+  const riskInput = document.getElementById('riskFreeInput');
+
+  const initialValue = Math.max(Number(initialInput?.value || 25000), 1);
+  const riskFreeRate = Math.max(Number(riskInput?.value || 4), 0) / 100;
+
+  DASHBOARD_STATE.initialValue = initialValue;
+  DASHBOARD_STATE.riskFreeRate = riskFreeRate;
+
+  const currentValue = initialValue * (1 + PORTFOLIO_TOTAL_RETURN);
+  const gain = currentValue - initialValue;
+  const sharpe = (PORTFOLIO_TOTAL_RETURN - riskFreeRate) / ANNUAL_VOLATILITY;
+
+  const marketValue = initialValue * (1 + STRESS_RETURNS.market);
+  const techValue = initialValue * (1 + STRESS_RETURNS.tech);
+  const rateValue = initialValue * (1 + STRESS_RETURNS.rate);
+
+  setText('aumBadge', money(initialValue) + ' AUM');
+  setText('portfolioValueKpi', money(currentValue));
+  setText('portfolioValueSub', 'From ' + money(initialValue) + ' initial');
+  setText('portfolioGainBadge', (gain >= 0 ? '+' : '-') + money(Math.abs(gain)).replace('$', '$') + ' gain');
+  setText('sharpeKpi', sharpe.toFixed(2));
+  setText('riskFreeKpi', (riskFreeRate * 100).toFixed(2) + '%');
+  setText('worstStressBadge', money(techValue) + ' floor');
+
+  setText('baseValueKpi', money(initialValue));
+  setText('marketValueKpi', money(marketValue));
+  setText('marketLossBadge', '-' + money(initialValue - marketValue));
+  setText('techValueKpi', money(techValue));
+  setText('techLossBadge', '-' + money(initialValue - techValue));
+  setText('rateValueKpi', money(rateValue));
+  setText('rateLossBadge', '-' + money(initialValue - rateValue));
+
+  setText('marketStressText', pct(STRESS_RETURNS.market) + ' → ' + money(marketValue));
+  setText('techStressText', pct(STRESS_RETURNS.tech) + ' → ' + money(techValue));
+  setText('rateStressText', pct(STRESS_RETURNS.rate) + ' → ' + money(rateValue));
+
+  setText('baseVsValue', money(initialValue));
+  setText('rateVsValue', money(rateValue));
+  setText('marketVsValue', money(marketValue));
+  setText('techVsValue', money(techValue));
+  setText('inputOutputText', money(initialValue) + ' grows to ' + money(currentValue) + ' before stress testing. Worst stress value: ' + money(techValue) + '.');
+
+  if (stressChartInstance) {
+    stressChartInstance.data.datasets[0].data = [initialValue, rateValue, marketValue, techValue];
+    stressChartInstance.options.scales.y.suggestedMax = Math.max(initialValue * 1.2, currentValue * 0.85);
+    stressChartInstance.update();
+  }
+}
+
+
+// ===================== ALLOCATION DONUT =====================
+new Chart(document.getElementById('allocChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['AAPL 30%', 'QQQ 30%', 'NVDA 20%', 'AMZN 10%', 'SHOP 10%'],
+    datasets: [{
+      data: [30, 30, 20, 10, 10],
+      backgroundColor: ['#0078d4','#008272','#107c10','#5c2d91','#f2c811'],
+      borderColor: '#ffffff',
+      borderWidth: 3,
+      hoverOffset: 6
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: '65%',
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#ffffff',
+        titleColor: '#252423',
+        bodyColor: '#252423',
+        borderColor: '#c8c6c4',
+        borderWidth: 1,
+        callbacks: {
+          label: ctx => ' ' + ctx.label + ' — ' + ctx.parsed + '%'
+        }
+      }
+    }
+  }
+});
+
+// ===================== ANNUAL RETURNS BAR =====================
+new Chart(document.getElementById('returnsChart'), {
+  type: 'bar',
+  data: {
+    labels: ['AAPL', 'AMZN', 'SHOP', 'QQQ', 'NVDA'],
+    datasets: [{
+      data: [29.76, 39.37, 65.79, 32.68, 136.62],
+      backgroundColor: ['#0078d4','#5c2d91','#f2c811','#008272','#107c10'],
+      borderRadius: 6,
+      borderSkipped: false
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#ffffff',
+        titleColor: '#252423',
+        bodyColor: '#252423',
+        borderColor: '#c8c6c4',
+        borderWidth: 1,
+        callbacks: {
+          label: ctx => ' +' + ctx.parsed.y.toFixed(1) + '%'
+        }
+      }
+    },
+    scales: {
+      x: { grid: { display: false }, ticks: { color: '#605e5c' } },
+      y: { grid: { color: '#edebe9' }, ticks: { color: '#605e5c', callback: v => '+' + v + '%' } }
+    }
+  }
+});
+
+// ===================== PERFORMANCE CHART =====================
+let perfChartInstance;
+function buildPerfChart(dateIndexes) {
+  const indexes = dateIndexes && dateIndexes.length ? dateIndexes : allDates.map((_, i) => i);
+  const slice = indexes.map(i => cumulativeData[i]);
+  const labels = indexes.map(i => allDates[i]);
+  if (perfChartInstance) perfChartInstance.destroy();
+  perfChartInstance = new Chart(document.getElementById('perfChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data: slice,
+        borderColor: '#107c10',
+        backgroundColor: 'rgba(16,124,16,0.08)',
+        fill: true,
+        borderWidth: 1.5,
+        tension: 0.3,
+        pointRadius: 0,
+        pointHoverRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#ffffff',
+          titleColor: '#252423',
+          bodyColor: '#252423',
+          borderColor: '#c8c6c4',
+          borderWidth: 1,
+          callbacks: {
+            label: ctx => ' Portfolio: ' + (ctx.parsed.y >= 0 ? '+' : '') + ctx.parsed.y.toFixed(2) + '%'
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { maxTicksLimit: 8, color: '#605e5c', maxRotation: 0 }
+        },
+        y: {
+          grid: { color: '#edebe9' },
+          ticks: {
+            color: '#605e5c',
+            callback: v => (v >= 0 ? '+' : '') + v.toFixed(0) + '%'
+          }
+        }
+      }
+    }
+  });
+}
+buildPerfChart(allDates.map((_, i) => i));
+
+function filterPerfByYear(year, btn) {
+  document.querySelectorAll('.range-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  if (year === 'all') {
+    buildPerfChart(allDates.map((_, i) => i));
+    return;
+  }
+
+  const indexes = allDateObjects
+    .map((date, index) => ({ date, index }))
+    .filter(item => item.date.getFullYear() === Number(year))
+    .map(item => item.index);
+
+  buildPerfChart(indexes);
+}
+
+// ===================== PRICE CHART (NORMALISED) =====================
+const normAAPL = buildNormalized(aaplPrices);
+const normNVDA = buildNormalized(nvidaPrices);
+const nPts = Math.min(normAAPL.length, normNVDA.length);
+// Sample every 3rd for performance
+const step = 3;
+const priceLabels = allDates.filter((_, i) => i % step === 0).slice(0, Math.ceil(nPts / step));
+const sampledAAPL = normAAPL.filter((_, i) => i % step === 0);
+const sampledNVDA = normNVDA.filter((_, i) => i % step === 0);
+
+new Chart(document.getElementById('priceChart'), {
+  type: 'line',
+  data: {
+    labels: priceLabels,
+    datasets: [
+      { label: 'AAPL', data: sampledAAPL, borderColor: '#0078d4', borderWidth: 1.5, tension: 0.3, pointRadius: 0, fill: false },
+      { label: 'NVDA', data: sampledNVDA, borderColor: '#107c10', borderWidth: 1.5, tension: 0.3, pointRadius: 0, fill: false }
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#ffffff',
+        titleColor: '#252423',
+        bodyColor: '#252423',
+        borderColor: '#c8c6c4',
+        borderWidth: 1,
+        callbacks: {
+          label: ctx => ' ' + ctx.dataset.label + ': ' + (ctx.parsed.y >= 0 ? '+' : '') + ctx.parsed.y.toFixed(1) + '%'
+        }
+      }
+    },
+    scales: {
+      x: { grid: { display: false }, ticks: { maxTicksLimit: 6, color: '#605e5c', maxRotation: 0 } },
+      y: { grid: { color: '#edebe9' }, ticks: { color: '#605e5c', callback: v => (v >= 0 ? '+' : '') + v.toFixed(0) + '%' } }
+    }
+  }
+});
+
+// ===================== HISTOGRAM =====================
+function buildHistogram(returns, bins) {
+  const min = Math.min(...returns);
+  const max = Math.max(...returns);
+  const binWidth = (max - min) / bins;
+  const counts = new Array(bins).fill(0);
+  const labels = [];
+  for (let i = 0; i < bins; i++) {
+    const lo = min + i * binWidth;
+    labels.push((lo * 100).toFixed(1) + '%');
+    for (const r of returns) {
+      if (r >= lo && r < lo + binWidth) counts[i]++;
+    }
+  }
+  return { labels, counts };
+}
+const hist = buildHistogram(rawPortfolioReturns, 30);
+const histColors = hist.labels.map(l => parseFloat(l) < 0 ? 'rgba(209,52,56,0.65)' : 'rgba(16,124,16,0.65)');
+
+new Chart(document.getElementById('histChart'), {
+  type: 'bar',
+  data: {
+    labels: hist.labels,
+    datasets: [{
+      data: hist.counts,
+      backgroundColor: histColors,
+      borderRadius: 2,
+      borderSkipped: false
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#ffffff',
+        titleColor: '#252423',
+        bodyColor: '#252423',
+        borderColor: '#c8c6c4',
+        borderWidth: 1,
+        callbacks: {
+          label: ctx => ' Days: ' + ctx.parsed.y
+        }
+      }
+    },
+    scales: {
+      x: { grid: { display: false }, ticks: { maxTicksLimit: 8, color: '#605e5c', maxRotation: 45 } },
+      y: { grid: { color: '#edebe9' }, ticks: { color: '#605e5c' } }
+    }
+  }
+});
+
+// ===================== VOLATILITY BAR CHART =====================
+new Chart(document.getElementById('volChart'), {
+  type: 'bar',
+  data: {
+    labels: ['AAPL', 'AMZN', 'SHOP', 'QQQ', 'NVDA'],
+    datasets: [
+      {
+        label: 'Asset Volatility',
+        data: [1.61, 2.01, 3.60, 1.26, 3.16],
+        backgroundColor: ['#0078d4','#5c2d91','#f2c811','#008272','#107c10'],
+        borderRadius: 6,
+        borderSkipped: false
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#ffffff',
+        titleColor: '#252423',
+        bodyColor: '#252423',
+        borderColor: '#c8c6c4',
+        borderWidth: 1,
+        callbacks: {
+          label: ctx => ' Daily σ: ' + ctx.parsed.y.toFixed(2) + '%'
+        }
+      },
+      annotation: {}
+    },
+    scales: {
+      x: { grid: { display: false }, ticks: { color: '#605e5c' } },
+      y: {
+        grid: { color: '#edebe9' },
+        ticks: { color: '#605e5c', callback: v => v.toFixed(1) + '%' },
+        suggestedMax: 4.2
+      }
+    }
+  },
+  plugins: [{
+    afterDraw(chart) {
+      const ctx2 = chart.ctx;
+      const yScale = chart.scales.y;
+      const yVal = yScale.getPixelForValue(1.634);
+      ctx2.save();
+      ctx2.setLineDash([5, 4]);
+      ctx2.strokeStyle = 'rgba(209,52,56,0.55)';
+      ctx2.lineWidth = 1.5;
+      ctx2.beginPath();
+      ctx2.moveTo(chart.chartArea.left, yVal);
+      ctx2.lineTo(chart.chartArea.right, yVal);
+      ctx2.stroke();
+      ctx2.fillStyle = 'rgba(209,52,56,0.9)';
+      ctx2.font = '10px -apple-system, sans-serif';
+      ctx2.fillText('Portfolio σ 1.63%', chart.chartArea.right - 90, yVal - 5);
+      ctx2.restore();
+    }
+  }]
+});
+
+// ===================== ROLLING VOLATILITY =====================
+const rollVol = rollingVol(rawPortfolioReturns, 30);
+const rvLabels = allDates.slice(30, 30 + rollVol.length).filter((_, i) => i % 3 === 0);
+const rvData = rollVol.filter((_, i) => i % 3 === 0);
+
+new Chart(document.getElementById('rollingVolChart'), {
+  type: 'line',
+  data: {
+    labels: rvLabels,
+    datasets: [{
+      data: rvData,
+      borderColor: '#f2c811',
+      backgroundColor: 'rgba(242,200,17,0.16)',
+      fill: true,
+      borderWidth: 1.5,
+      tension: 0.4,
+      pointRadius: 0
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#ffffff',
+        titleColor: '#252423',
+        bodyColor: '#252423',
+        borderColor: '#c8c6c4',
+        borderWidth: 1,
+        callbacks: { label: ctx => ' 30d σ: ' + ctx.parsed.y.toFixed(2) + '%' }
+      }
+    },
+    scales: {
+      x: { grid: { display: false }, ticks: { maxTicksLimit: 8, color: '#605e5c', maxRotation: 0 } },
+      y: { grid: { color: '#edebe9' }, ticks: { color: '#605e5c', callback: v => v.toFixed(1) + '%' } }
+    }
+  }
+});
+
+// ===================== STRESS TEST CHART =====================
+let stressChartInstance = new Chart(document.getElementById('stressChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Base', 'Rate Hike', 'Market Crash', 'Tech Crash'],
+    datasets: [{
+      data: [DASHBOARD_STATE.initialValue, DASHBOARD_STATE.initialValue * (1 + STRESS_RETURNS.rate), DASHBOARD_STATE.initialValue * (1 + STRESS_RETURNS.market), DASHBOARD_STATE.initialValue * (1 + STRESS_RETURNS.tech)],
+      backgroundColor: ['#107c10','#0078d4','#f2c811','#d13438'],
+      borderRadius: 8,
+      borderSkipped: false
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#ffffff',
+        titleColor: '#252423',
+        bodyColor: '#252423',
+        borderColor: '#c8c6c4',
+        borderWidth: 1,
+        callbacks: {
+          label: ctx => ' $' + ctx.parsed.y.toLocaleString()
+        }
+      }
+    },
+    scales: {
+      x: { grid: { display: false }, ticks: { color: '#605e5c' } },
+      y: {
+        grid: { color: '#edebe9' },
+        ticks: { color: '#605e5c', callback: v => '$' + (v/1000).toFixed(0) + 'k' },
+        suggestedMin: 0,
+        suggestedMax: DASHBOARD_STATE.initialValue * 1.2
+      }
+    }
+  },
+  plugins: [{
+    afterDraw(chart) {
+      const ctx2 = chart.ctx;
+      const yScale = chart.scales.y;
+      const yVal = yScale.getPixelForValue(DASHBOARD_STATE.initialValue);
+      ctx2.save();
+      ctx2.setLineDash([4, 4]);
+      ctx2.strokeStyle = 'rgba(16,124,16,0.45)';
+      ctx2.lineWidth = 1;
+      ctx2.beginPath();
+      ctx2.moveTo(chart.chartArea.left, yVal);
+      ctx2.lineTo(chart.chartArea.right, yVal);
+      ctx2.stroke();
+      ctx2.restore();
+    }
+  }]
+});
+
+// ===================== CORRELATION MATRIX =====================
+const assets = ['AAPL','AMZN','SHOP','QQQ','NVDA'];
+const corrData = [
+  [1.000, 0.465, 0.445, 0.686, 0.373],
+  [0.465, 1.000, 0.519, 0.740, 0.464],
+  [0.445, 0.519, 1.000, 0.604, 0.387],
+  [0.686, 0.740, 0.604, 1.000, 0.740],
+  [0.373, 0.464, 0.387, 0.740, 1.000]
+];
+
+function corrColor(val) {
+  if (val >= 0.9) return { bg: '#fff4ce', text: '#605e00' };
+  if (val >= 0.7) return { bg: '#deecf9', text: '#004578' };
+  if (val >= 0.5) return { bg: '#ede7f6', text: '#5c2d91' };
+  if (val >= 0.3) return { bg: '#fff8e1', text: '#8a6d00' };
+  return { bg: '#fafafa', text: '#605e5c' };
+}
+
+const matrix = document.getElementById('corrMatrix');
+let html = '<div class="corr-grid">';
+html += '<div class="corr-header"></div>';
+assets.forEach(a => {
+  html += `<div class="corr-header">${a}</div>`;
+});
+assets.forEach((row, i) => {
+  html += `<div class="corr-label">${row}</div>`;
+  assets.forEach((col, j) => {
+    const val = corrData[i][j];
+    const c = corrColor(val);
+    const diag = i === j;
+    html += `<div class="corr-cell" style="background:${diag ? '#fff4ce' : c.bg};color:${diag ? '#107c10' : c.text};border:1px solid #edebe9;font-weight:${diag ? '700' : '600'}">${val.toFixed(2)}</div>`;
+  });
+});
+html += '</div>';
+matrix.innerHTML = html;
+
+applyUserInputs();
+
+// ===================== TAB SWITCHING =====================
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('panel-' + tab).classList.add('active');
+}
+</script>
+</body>
+</html>
